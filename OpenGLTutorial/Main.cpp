@@ -16,15 +16,12 @@ void render(GLFWwindow* window);
 
 // some data
 const float vertices[] = {
-	-0.5f, -0.5f, 0.0f,
-	 0.5f, -0.5f, 0.0f,
-	-0.5f,  0.5f, 0.0f,
-	 0.5f,  0.5f, 0.0f
-};
-
-const unsigned int indices[] = {
-	0, 1, 2,
-	1, 2, 3
+	-0.8f, -0.5f, 0.0f,
+	-0.6f, -0.5f, 0.0f,
+	-0.7f,  0.5f, 0.0f,
+	 0.6f, -0.5f, 0.0f,
+	 0.8f, -0.5f, 0.0f,
+	 0.7f,  0.5f, 0.0f
 };
 
 const char* vertexShaderSource = "#version 330 core\n"
@@ -77,12 +74,6 @@ int main() {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	// make ebo
-	unsigned int ebo;
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
 	// compile shaders
 	unsigned int vertexShader, fragShader, shaderProgram;
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -107,8 +98,7 @@ int main() {
 		render(window);
 		glUseProgram(shaderProgram);
 		glBindVertexArray(vao);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 		
 
 		// glfw
