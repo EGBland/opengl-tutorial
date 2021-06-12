@@ -30,11 +30,18 @@ const char* vertexShaderSource = "#version 330 core\n"
 "\tgl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 "}\0";
 
-const char* fragShaderSource = "#version 330 core\n"
+const char* fragShaderSource[] = { "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main() {\n"
 "\tFragColor = vec4(1.0f,0.5f,0.2f,1.0f);\n"
-"}\0";
+"}\0",
+
+"#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main() {\n"
+"\t FragColor = vec4(1.0f,1.0f,0.0f,1.0f);\n"
+"}\0"
+};
 
 int main() {
 	// init
@@ -82,19 +89,28 @@ int main() {
 	glEnableVertexAttribArray(0);
 
 	// compile shaders
-	unsigned int vertexShader, fragShader, shaderProgram;
+	unsigned int vertexShader;
+	unsigned int fragShaders[2], shaderPrograms[2];
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 	glCompileShader(vertexShader);
-	fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragShader, 1, &fragShaderSource, NULL);
-	glCompileShader(fragShader);
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragShader);
-	glLinkProgram(shaderProgram);
+	fragShaders[0] = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragShaders[0], 1, &fragShaderSource[0], NULL);
+	glCompileShader(fragShaders[0]);
+	fragShaders[1] = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragShaders[1], 1, &fragShaderSource[1], NULL);
+	glCompileShader(fragShaders[1]);
+	shaderPrograms[0] = glCreateProgram();
+	glAttachShader(shaderPrograms[0], vertexShader);
+	glAttachShader(shaderPrograms[0], fragShaders[0]);
+	glLinkProgram(shaderPrograms[0]);
+	shaderPrograms[1] = glCreateProgram();
+	glAttachShader(shaderPrograms[1], vertexShader);
+	glAttachShader(shaderPrograms[1], fragShaders[1]);
+	glLinkProgram(shaderPrograms[1]);
 	glDeleteShader(vertexShader);
-	glDeleteShader(fragShader);
+	glDeleteShader(fragShaders[0]);
+	glDeleteShader(fragShaders[1]);
 
 	// main loop
 	while (!glfwWindowShouldClose(window)) {
@@ -103,9 +119,10 @@ int main() {
 
 		// render
 		render(window);
-		glUseProgram(shaderProgram);
+		glUseProgram(shaderPrograms[0]);
 		glBindVertexArray(vao[0]);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glUseProgram(shaderPrograms[1]);
 		glBindVertexArray(vao[1]);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		
