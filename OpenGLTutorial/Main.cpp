@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -16,32 +17,32 @@ void render(GLFWwindow* window);
 
 // some data
 const float vertices[] = {
-	-0.8f, -0.5f, 0.0f,
-	-0.6f, -0.5f, 0.0f,
-	-0.7f,  0.5f, 0.0f,
-	 0.6f, -0.5f, 0.0f,
-	 0.8f, -0.5f, 0.0f,
-	 0.7f,  0.5f, 0.0f
+	-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 80.0f/255.0f,
+	 0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 32.0f/255.0f,
+	-0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 176.0f/255.0f,
+	 0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 128.0f/255.0f
+};
+
+const unsigned int indices[] = {
+	0, 1, 2,
+	1, 2, 3
 };
 
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
+"layout (location = 1) in vec3 aColor;"
+"out vec3 theColor;"
 "void main() {\n"
-"\tgl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"\tgl_Position = vec4(aPos, 1.0);\n"
+"\ttheColor = aColor;"
 "}\0";
 
-const char* fragShaderSource[] = { "#version 330 core\n"
+const char* fragShaderSource = "#version 330 core\n"
+"in vec3 theColor;"
 "out vec4 FragColor;\n"
 "void main() {\n"
-"\tFragColor = vec4(1.0f,0.5f,0.2f,1.0f);\n"
-"}\0",
-
-"#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main() {\n"
-"\t FragColor = vec4(1.0f,1.0f,0.0f,1.0f);\n"
-"}\0"
-};
+"\tFragColor = vec4(theColor,0.0f);\n"
+"}\0";
 
 int main() {
 	// init
@@ -68,70 +69,64 @@ int main() {
 	// give glad another frame buffer size callback
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-	// make vaos
-	unsigned int vao[2];
-	glGenVertexArrays(2, vao);
-	
-	// make vbos
-	unsigned int vbo[2];
-	glGenBuffers(2, vbo);
+	// make vao
+	unsigned int vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
 
-	glBindVertexArray(vao[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) / 2, vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	// make vbo
+	unsigned int vbo;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
-	glBindVertexArray(vao[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) / 2, vertices + 9, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+	// make ebo
+	unsigned int ebo;
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// compile shaders
-	unsigned int vertexShader;
-	unsigned int fragShaders[2], shaderPrograms[2];
+	unsigned int vertexShader, fragShader, shaderProgram;
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 	glCompileShader(vertexShader);
-	fragShaders[0] = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragShaders[0], 1, &fragShaderSource[0], NULL);
-	glCompileShader(fragShaders[0]);
-	fragShaders[1] = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragShaders[1], 1, &fragShaderSource[1], NULL);
-	glCompileShader(fragShaders[1]);
-	shaderPrograms[0] = glCreateProgram();
-	glAttachShader(shaderPrograms[0], vertexShader);
-	glAttachShader(shaderPrograms[0], fragShaders[0]);
-	glLinkProgram(shaderPrograms[0]);
-	shaderPrograms[1] = glCreateProgram();
-	glAttachShader(shaderPrograms[1], vertexShader);
-	glAttachShader(shaderPrograms[1], fragShaders[1]);
-	glLinkProgram(shaderPrograms[1]);
+	fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragShader, 1, &fragShaderSource, NULL);
+	glCompileShader(fragShader);
+	shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragShader);
+	glLinkProgram(shaderProgram);
 	glDeleteShader(vertexShader);
-	glDeleteShader(fragShaders[0]);
-	glDeleteShader(fragShaders[1]);
+	glDeleteShader(fragShader);
 
 	// main loop
+	int framecount = 0;
 	while (!glfwWindowShouldClose(window)) {
 		// process
 		processInput(window);
 
 		// render
 		render(window);
-		glUseProgram(shaderPrograms[0]);
-		glBindVertexArray(vao[0]);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		glUseProgram(shaderPrograms[1]);
-		glBindVertexArray(vao[1]);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		
+		glUseProgram(shaderProgram);
+		glBindVertexArray(vao);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 
 		// glfw
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		framecount++;
 	}
 
+	float theTime = glfwGetTime();
+	std::cout << "Rendered " << framecount << " frames in " << std::setw(2) << theTime << " seconds (" << framecount / theTime << " fps)" << std::endl;
 	// the end
 	glfwTerminate();
 	return 0;
