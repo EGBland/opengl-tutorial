@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "shader.h"
 
 // init
 void init();
@@ -27,22 +28,6 @@ const unsigned int indices[] = {
 	0, 1, 2,
 	1, 2, 3
 };
-
-const char* vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"layout (location = 1) in vec3 aColor;"
-"out vec3 theColor;"
-"void main() {\n"
-"\tgl_Position = vec4(aPos, 1.0);\n"
-"\ttheColor = aColor;"
-"}\0";
-
-const char* fragShaderSource = "#version 330 core\n"
-"in vec3 theColor;"
-"out vec4 FragColor;\n"
-"void main() {\n"
-"\tFragColor = vec4(theColor,0.0f);\n"
-"}\0";
 
 int main() {
 	// init
@@ -91,19 +76,7 @@ int main() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// compile shaders
-	unsigned int vertexShader, fragShader, shaderProgram;
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-	fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragShader, 1, &fragShaderSource, NULL);
-	glCompileShader(fragShader);
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragShader);
-	glLinkProgram(shaderProgram);
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragShader);
+	Shader shader = Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
 	// main loop
 	int framecount = 0;
@@ -113,7 +86,7 @@ int main() {
 
 		// render
 		render(window);
-		glUseProgram(shaderProgram);
+		shader.use();
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
