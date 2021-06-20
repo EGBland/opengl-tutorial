@@ -71,6 +71,10 @@ Shader::Shader(const char* vPath, const char* fPath) {
 	}
 }
 
+unsigned int Shader::getProgram() {
+	return this->program;
+}
+
 void Shader::use() {
 	glUseProgram(this->program);
 }
